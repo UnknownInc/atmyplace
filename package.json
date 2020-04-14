@@ -1,34 +1,42 @@
 {
   "name": "atmyplace",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.5.0",
-    "@testing-library/user-event": "^7.2.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1"
+  "version": "1.0.0",
+  "description": "at my place",
+  "main": "server.js",
+  "engines": {
+    "node": ">=12.13.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "build": "babel src -d build",
+    "buildweb": "cd uiapp && npm run build",
+    "dev": "nodemon -w ./src -r dotenv/config --exec babel-node src/server.js",
+    "start": "node build/server.js"
   },
-  "eslintConfig": {
-    "extends": "react-app"
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0",
+    "temp-dir": "^2.0.0",
+    "uuid": "^7.0.3",
+    "ws": "^7.2.3"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/node": "^7.8.7",
+    "@babel/preset-env": "^7.9.0",
+    "dotenv": "^8.2.0",
+    "nodemon": "^2.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UnknownInc/atmyplace.git"
+  },
+  "author": "Rakesh Ravuri",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/UnknownInc/atmyplace/issues"
+  },
+  "homepage": "https://github.com/UnknownInc/atmyplace#readme"
 }
