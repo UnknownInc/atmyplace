@@ -32,7 +32,7 @@ const options={
   Experiments: 'Experiments'
 };
 
-export default class HomePage extends Component {
+export default class ManagePage extends Component {
   state = {
     sideBarcollapsed: false,
     selectedOption: options.Schedule,
