@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 
 import {
   Route,
@@ -14,11 +14,23 @@ import WelcomePage from './pages/WelcomePage';
 import ManagePage from './pages/ManagePage';
 import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
+
+import { logout} from "./helpers/auth";
 //import RTCMesh from 'react-rtc-real';
 
 //import RTCMesh from './RTCMesh';<RTCMesh URL="ws://d56f52f5.ngrok.io"/>
 
 //require('react-rtc-real/assets/index.css');
+
+class Logout extends PureComponent {
+  componentDidMount() {
+    logout();
+  }
+
+  render() {
+    return <Redirect to={'/'}/>
+  }
+}
 
 function PrivateRoute({ component: Component, authenticated, ...rest }) {
   return (
@@ -45,7 +57,7 @@ function PublicRoute({ component: Component, authenticated, ...rest }) {
         authenticated === false ? (
           <Component {...props} />
         ) : (
-            <Redirect to="/h" />
+            <Redirect to="/manage" />
           )
       }
     />
@@ -84,7 +96,7 @@ class App extends React.Component {
     ) : (
         <Router>
           <Switch>
-            <Route exact path="/" component={()=><WelcomePage authenticated={this.state.authenticated}/>} />
+            <Route exact path="/" component={(props)=><WelcomePage authenticated={this.state.authenticated} {...props}/>} />
             <PrivateRoute
               path="/manage"
               authenticated={this.state.authenticated}
@@ -100,6 +112,7 @@ class App extends React.Component {
               authenticated={this.state.authenticated}
               component={LoginPage}
             />
+            <Route exact path="/logout" component={Logout}/>
           </Switch>
         </Router>
       );
