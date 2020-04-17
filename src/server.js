@@ -22,6 +22,13 @@ app.get('/ping', async (_req, res) => {
   res.send('pong');
 });
 
+app.use('/api', require('./api'));
+
+app.get('*', (req, res)=>{
+  console.log('catch all');
+  return res.json({});
+});
+
 const port = process.env.PORT || 8080;
 const server = app.listen(port, () => {
   console.info('rmthks listening on port', port);

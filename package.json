@@ -9,13 +9,15 @@
   "scripts": {
     "build": "babel src -d build",
     "buildweb": "cd uiapp && npm run build",
-    "dev": "nodemon -w ./src -r dotenv/config --exec babel-node src/server.js",
+    "dev": "nodemon -w 'src/**/*' -r dotenv/config --exec babel-node src/server.js",
     "start": "node build/server.js"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-jwt": "^5.3.3",
+    "firebase": "^7.14.0",
     "morgan": "^1.10.0",
     "temp-dir": "^2.0.0",
     "uuid": "^7.0.3",
