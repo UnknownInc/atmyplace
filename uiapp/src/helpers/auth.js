@@ -1,10 +1,10 @@
 import { auth } from "../services/firebase";
 
-export function signup(email, password) {
+export function signUp(email, password) {
   return auth().createUserWithEmailAndPassword(email, password);
 }
 
-export function signin(email, password) {
+export function signIn(email, password) {
   return auth().signInWithEmailAndPassword(email, password);
 }
 
@@ -18,6 +18,6 @@ export function signInWithGitHub() {
   return auth().signInWithPopup(provider);
 }
 
-export function logout() {
+export function signOut() {
   return auth().signOut();
 }

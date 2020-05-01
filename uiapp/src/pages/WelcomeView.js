@@ -12,27 +12,26 @@ import {
 
 import {useStores} from '../hooks';
 
+import Logout from './Logout';
 import JoinForm from './JoinForm';
 
 const { Header, Content, Footer, Sider } = Layout;
 
 const { Search } = Input;
 
-const WelcomePage = observer((props)=>{
+const WelcomeView = observer((props)=>{
     const {authStore} = useStores();
     const {history} = props;
-    return <Layout style={{minHeight:'100vh'}}>
+    return <Layout style={{minHeight:'100%'}}>
       <Content className='center'>
         <Space direction='vertical'>
         {authStore.isAuthenticated ? <div style={{textAlign:'center'}}>
-          <h2>Welcome back!</h2>
-          <Link to='/manage'>Manage your Events</Link>
         </div>:null}
         <JoinForm/>
         {authStore.isAuthenticated ? <Row>
           <Col span='8'></Col>
           <Col>
-            <h4>Not you? <Link to={'/logout'}>Logout</Link></h4>
+            <h4>Not you? <Logout/></h4>
           </Col>
         </Row>:<Row>
           <Col span='8'></Col>
@@ -53,4 +52,4 @@ const WelcomePage = observer((props)=>{
     </Layout>
 });
 
-export default WelcomePage;
+export default WelcomeView;

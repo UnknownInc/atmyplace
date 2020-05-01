@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import { signup, signInWithGoogle, signInWithGitHub } from "../helpers/auth";
+import { signUp, signInWithGoogle, signInWithGitHub } from "../helpers/auth";
 
 import { Layout, Input, Row,Col, Form, Divider, Button, Checkbox, Card  } from 'antd';
 import {
@@ -50,7 +50,7 @@ export default class SignUpPage extends Component {
   handleSignin = async () => {
     this.setState({ error: '', busy: true });
     try {
-      await signup(this.state.email, this.state.password);
+      await signUp(this.state.email, this.state.password);
     } catch (error) {
       return this.setState({ error: error.message, busy: false});
     }

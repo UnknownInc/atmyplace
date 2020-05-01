@@ -20,6 +20,7 @@ const tailLayout = {
 const LoginPage = observer(()=>{
   const {authStore} = useStores();
   const [error, setError] = useState(null);
+  const [values, setValues] = useState({remember: true});
   const onFinish = async (values) => {
     setError(null);
     try {
@@ -34,6 +35,10 @@ const LoginPage = observer(()=>{
     console.log('Failed:', errorInfo);
   }
 
+  const onValuesChanged = (changedValues, allValues) => {
+    setValues(allValues);
+  }
+
   return <Layout style={{minHeight:'100vh'}}>
     <Layout.Content className="center">
       <Card title="Sign in to @myplace" loading={authStore.busy}>
@@ -45,7 +50,8 @@ const LoginPage = observer(()=>{
           {...layout}
           size="large"
           name="signin"
-          initialValues={{ remember: true }}
+          initialValues={values}
+          onValuesChange={onValuesChanged}
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
           style={{minWidth:'320px'}}
@@ -63,7 +69,7 @@ const LoginPage = observer(()=>{
             name="password"
             rules={[{ required: true, message: 'Please input your password!' }]}
           >
-            <Input.Password prefix={<LockOutlined/>} placeholder="password"/>
+            <Input.Password prefix={<LockOutlined/>} placeholder="password" onPressEnter={()=>onFinish(values)}/>
           </Form.Item>
 
           <Form.Item name="remember" valuePropName="checked" {...tailLayout}>

@@ -25,8 +25,7 @@ app.get('/ping', async (_req, res) => {
 app.use('/api', require('./api'));
 
 app.get('*', (req, res)=>{
-  console.log('catch all');
-  return res.json({});
+  res.redirect('/index.html')
 });
 
 const port = process.env.PORT || 8080;
