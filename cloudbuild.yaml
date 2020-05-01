@@ -6,6 +6,8 @@
    - '-c'
    - |
      mkdir /local-cache-dir
+     cd /local-cache-dir
+     pwd
      docker pull gcr.io/$PROJECT_ID/atmyplace:latest || exit 0
  - name: gcr.io/cloud-builders/gsutil
    args: ['rsync', '-r', 'gs://my-cache-bucket/repository', '/local-cache-dir']
