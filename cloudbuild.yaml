@@ -5,10 +5,10 @@
    args:
    - '-c'
    - |
-     mkdir local-cache-dir
+     mkdir /local-cache-dir
      docker pull gcr.io/$PROJECT_ID/atmyplace:latest || exit 0
  - name: gcr.io/cloud-builders/gsutil
-   args: ['rsync', '-r', 'gs://my-cache-bucket/repository', 'local-cache-dir']
+   args: ['rsync', '-r', 'gs://my-cache-bucket/repository', '/local-cache-dir']
  #step1 build the container image
  - name: 'gcr.io/cloud-builders/docker'
    args: [
