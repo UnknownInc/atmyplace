@@ -13,6 +13,7 @@ FROM base AS build
 # A wildcard is used to ensure both package.json AND package-lock.json are copied.
 # Copying this separately prevents re-running npm install on every code change.
 COPY package*.json /atmyplace/
+RUN cp -r /local-cache-dir/. /atmyplace
 
 WORKDIR /atmyplace
 RUN npm install
@@ -21,6 +22,7 @@ COPY . ./
 
 RUN npm run build
 
+RUN cp -r ./node_modules/. /local-cache-dir
 RUN rm -rf node_modules
 
 FROM base AS uibuild
@@ -31,7 +33,12 @@ FROM base AS uibuild
 COPY uiapp/package*.json /uiapp/
 
 WORKDIR /uiapp
+
+RUN cp -r /local-cache-dir/. /uiapp
+
 RUN npm install
+
+RUN cp -r ./node_modules/. /local-cache-dir
 
 COPY ./uiapp ./
 
