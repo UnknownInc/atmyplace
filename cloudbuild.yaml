@@ -5,7 +5,8 @@
    args:
    - '-c'
    - |
-     mkdir /local-cache-dir
+     mkdir local-cache-dir
+     pwd
      ls -al
      docker pull gcr.io/$PROJECT_ID/atmyplace:latest || exit 0
  - name: gcr.io/cloud-builders/gsutil
