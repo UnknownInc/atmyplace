@@ -30,4 +30,7 @@ RUN npm install --unsafe-perm || \
   ((if [ -f npm-debug.log ]; then \
       cat npm-debug.log; \
     fi) && false)
+
+RUN npm run build
+
 CMD npm start
