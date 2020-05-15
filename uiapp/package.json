@@ -51,7 +51,7 @@
     "babel-preset-mobx": "^2.0.0",
     "customize-cra": "^0.9.1",
     "less": "^3.11.1",
-    "less-loader": "^5.0.0",
-    "react-app-rewired": "^2.1.5"
+    "less-loader": "^6.1.0",
+    "react-app-rewired": "^2.1.6"
   }
 }

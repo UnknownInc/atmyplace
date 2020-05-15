@@ -16,11 +16,18 @@ WORKDIR /app/uiapp
 # as well.
 # This command will also cat the npm-debug.log file after the
 # build, if it exists.
-RUN npm install --unsafe-perm
+RUN npm install --unsafe-perm || \
+  ((if [ -f npm-debug.log ]; then \
+      cat npm-debug.log; \
+    fi) && false)
 
+RUN npm i react-app-rewired -g
 RUN npm run build
 
 WORKDIR /app
 
-RUN npm install --unsafe-perm
+RUN npm install --unsafe-perm || \
+  ((if [ -f npm-debug.log ]; then \
+      cat npm-debug.log; \
+    fi) && false)
 CMD npm start

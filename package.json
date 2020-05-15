@@ -4,7 +4,8 @@
   "description": "at my place",
   "main": "server.js",
   "engines": {
-    "node": ">=12.13.0"
+    "node": ">=13.14.0",
+    "npm":">=6.14.5"
   },
   "scripts": {
     "deploy": "gcloud app deploy app.yaml",
