@@ -24,7 +24,7 @@
    args:
    - 'app'
    - 'deploy'
-   - '--image'
+   - '--image-url'
    - 'gcr.io/$PROJECT_ID/atmyplace:latest' 
 
 #  #step3 Deploy container image to Cloud Run

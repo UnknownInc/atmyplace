@@ -10,8 +10,6 @@ COPY . /app/
 
 WORKDIR /app/uiapp
 
-RUN npm i create-react-app -g
-
 # You have to specify "--unsafe-perm" with npm install
 # when running as root.  Failing to do this can cause
 # install to appear to succeed even if a preinstall
@@ -23,10 +21,6 @@ RUN npm install --unsafe-perm || \
   ((if [ -f npm-debug.log ]; then \
       cat npm-debug.log; \
     fi) && false)
-
-RUN npm install react-dev-utils
-
-RUN npm i react-app-rewired -g
 
 RUN npm run build
 
