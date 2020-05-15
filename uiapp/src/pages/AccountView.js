@@ -1,54 +1,43 @@
-import React, { Component, useState } from 'react';
+import React from 'react';
 
 import {observer} from 'mobx-react';
 
 import {
   Form,
-  Select,
   Input,
-  Switch,
-  Radio,
-  Slider,
   Button,
-  Upload,
-  Rate,
-  Checkbox,
-  Row,
-  Col,
   Layout,
   PageHeader,
 } from 'antd';
-import { UploadOutlined, InboxOutlined } from '@ant-design/icons';
 
 import {useStores} from '../hooks';
 
-const { Option } = Select;
 
 const formItemLayout = {
   labelCol: { span: 4 },
   wrapperCol: { span: 14 },
 };
 
-const AccountView  =observer((props)=>{
-  const {authStore} = useStores();
+const AccountView  =observer((_props)=>{
+  const {user} = useStores();
   const [form] = Form.useForm();
 
   const onFinish = values => {
-    authStore.updateProfile(values);
+    user.update(values);
   };
   return <Layout style={{height:'100%'}}>
     <Layout.Content>
       <PageHeader title='Account Information'
-        avatar={{ src: authStore.user.photoURL }} >
+        avatar={{ src: user.photoURL }} >
 
       </PageHeader> 
       <Form form={form} colon={false}
-        name="validate_other"
+        name="form_account"
         {...formItemLayout}
         onFinish={onFinish}
         initialValues={{
-          displayName: authStore.user.displayName,
-          shortDescription: authStore.user.shortDescription 
+          displayName: user.displayName,
+          shortDescription: user.shortDescription 
         }}
       >
         {/* <Form.Item label=" ">

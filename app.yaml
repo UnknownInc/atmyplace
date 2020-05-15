@@ -1,0 +1,13 @@
+env: flex
+runtime: custom
+liveness_check:
+  path: "/ping"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+network:
+  instance_tag: atmyplace
+  name: atmyplace
+  subnetwork_name: frontend
+  session_affinity: true

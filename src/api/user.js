@@ -1,12 +1,17 @@
 import express from 'express';
 import {db} from '../services/firebase.js';
-import {requireAuth} from '../services/auth.js';
+import {requireAuth, requireUser} from '../services/auth.js';
 import md5 from 'md5';
 const api = express.Router();
 
-api.get('/profile', requireAuth, async (req, res) => {
-
-  const docRef = db.collection('/atmyplace/users/profile').doc(`${req.uid}`);
+api.get('/:uid', requireAuth, async (req, res) => {
+  let uid=req.uid;
+  if (req.uid!==req.params.uid) {
+    if (req.params.uid.toLowerCase()!=='current') {
+      return res.status(403).send();
+    }
+  }
+  const docRef = db().collection('/atmyplace_users').doc(`${uid}`);
 
   let snapshot = await docRef.get();
   if (!snapshot.exists) {
@@ -22,15 +27,19 @@ api.get('/profile', requireAuth, async (req, res) => {
   return res.json( snapshot.data());
 })
 
-api.post('/profile', requireAuth, async (req, res)=>{
+api.post('/:uid', requireAuth, async (req, res)=>{
+  let uid=req.uid;
+  if (req.uid!==req.params.uid) {
+    if (req.params.uid!=='current') {
+      return res.status(403).send();
+    }
+  }
   try {
-    const docRef = db.collection('/atmyplace/users/profile').doc(`${req.uid}`);
+    const docRef = db().collection('/atmyplace_users').doc(`${uid}`);
 
-    let snapshot = await docRef.get();
+    //let snapshot = await docRef.get();
 
     const updates={};
-
-    console.log(req.body);
 
     if (req.body.displayName) {
       updates.displayName = req.body.displayName.trim();
@@ -46,7 +55,7 @@ api.post('/profile', requireAuth, async (req, res)=>{
 
     await docRef.update(updates);
 
-    snapshot = await docRef.get();
+    const snapshot = await docRef.get();
 
     return res.json(snapshot.data());
   } catch (e) {

@@ -1,8 +1,8 @@
-import React, { Component, useState } from 'react';
+import React, {useState} from 'react';
 
 import {observer} from 'mobx-react';
 
-import { Layout, Menu, Modal, notification } from 'antd';
+import { Layout, Menu, Modal } from 'antd';
 import {
   UserOutlined,
   CalendarOutlined,
@@ -10,7 +10,6 @@ import {
   ExperimentOutlined,
   AppstoreAddOutlined,
   HomeOutlined,
-  ApiOutlined,
 } from '@ant-design/icons';
 
 import {useStores} from '../hooks';
@@ -19,10 +18,9 @@ import JoinForm from './JoinForm';
 import AccountView from './AccountView';
 
 import CalendarView from './CalendarView';
-import WelcomeView from './WelcomeView';
-import { auth } from 'firebase';
+import EventView from './EventView';
 
-const { Header, Content, Sider } = Layout;
+const { Content, Sider } = Layout;
 
 const options={
   Home: 'Home',
@@ -34,87 +32,85 @@ const options={
 };
 
 
-let isCreatingSocket = false; 
-const createMainSocket = async () =>{
-  if (isCreatingSocket) return;
-  isCreatingSocket = true;
-  const key='n_conncetionstatus'
-  const notify = (description)=>{
-    notification.open({
-      key,
-      message:'Server Connection',
-      description,
-      icon:<ApiOutlined />
-    });
-  }
-  try {
-    const socket = new WebSocket('wss://atmyplace.rmcloudsoftware.com');
+// let isCreatingSocket = false; 
+// const createMainSocket = async () =>{
+//   if (isCreatingSocket) return;
+//   isCreatingSocket = true;
+//   const key='n_conncetionstatus'
+//   const notify = (description)=>{
+//     notification.open({
+//       key,
+//       message:'Server Connection',
+//       description,
+//       icon:<ApiOutlined />
+//     });
+//   }
+//   try {
+//     const socket = new WebSocket('wss://atmyplace.rmcloudsoftware.com');
     
-    socket.onopen = () => {
-     notify('Connected.')
-    }
+//     socket.onopen = () => {
+//      notify('Connected.')
+//     }
 
-    socket.onmessage = (message) => {
-      console.info('Recieving Websocket message: ', message);
-      const data = JSON.parse(message.data);
-      // switch (data.type) {
-      //   case TYPE_NEW_USER:
-      //     handleSocketConnection(data.id);
-      //     break;
-      //   case TYPE_CONNECTION:
-      //     handleConnectionReady(data);
-      //     break;
-      //   case TYPE_OFFER:
-      //     console.log('case Offer')
-      //     handleOffer(data);
-      //     break;
-      //   case TYPE_ANSWER:
-      //     console.log('case Answer')
-      //     handleAnswer(data);
-      //     break;
-      //   case TYPE_ICECANDIDATE:
-      //     console.log('case Ice Candidate')
-      //     handleIceCandidate(data);
-      //     break;
-      //   default:
-      //     console.error('Recieving message failed');
-      // }
-    }
+//     socket.onmessage = (message) => {
+//       console.info('Recieving Websocket message: ', message);
+//       const data = JSON.parse(message.data);
+//       // switch (data.type) {
+//       //   case TYPE_NEW_USER:
+//       //     handleSocketConnection(data.id);
+//       //     break;
+//       //   case TYPE_CONNECTION:
+//       //     handleConnectionReady(data);
+//       //     break;
+//       //   case TYPE_OFFER:
+//       //     console.log('case Offer')
+//       //     handleOffer(data);
+//       //     break;
+//       //   case TYPE_ANSWER:
+//       //     console.log('case Answer')
+//       //     handleAnswer(data);
+//       //     break;
+//       //   case TYPE_ICECANDIDATE:
+//       //     console.log('case Ice Candidate')
+//       //     handleIceCandidate(data);
+//       //     break;
+//       //   default:
+//       //     console.error('Recieving message failed');
+//       // }
+//     }
 
-    socket.onclose = (event) => {
-      console.log('Websocket closed: ', event);
-      notify('Disconnected.')
-    }
+//     socket.onclose = (event) => {
+//       console.log('Websocket closed: ', event);
+//       notify('Disconnected.')
+//     }
 
-    socket.onerror = (error) => {
-      console.error('Websocket error: ', error);
-      notify('Error in connection. Retrying...');
-    }
-    window.mainSocket = socket;
-  } finally {
-    isCreatingSocket = false;
-  }
-}
+//     socket.onerror = (error) => {
+//       console.error('Websocket error: ', error);
+//       notify('Error in connection. Retrying...');
+//     }
+//     window.mainSocket = socket;
+//   } finally {
+//     isCreatingSocket = false;
+//   }
+// }
 
 const MainPage = observer((props)=>{
 
-  const {history} = props;
-  const {authStore} = useStores();
+  const appcontext = useStores();
   const [sideBarcollapsed,setSideBarState] = useState(true);
   const [joinModalVisibility,setJoinModalVisibility] = useState(false);
   const [selectedView, setSelectedView] = useState(options.Welcome);
 
-  if (!window.mainSocket) {
-    createMainSocket().then(()=>{});
-  }
+  // if (!window.mainSocket) {
+  //   createMainSocket().then(()=>{});
+  // }
 
-  const showJoinModal = ()=>setJoinModalVisibility(true);
   const hideJoinModal = ()=>setJoinModalVisibility(false);
 
   const onCollapse = collapsed => setSideBarState(collapsed);
 
   const selectView = view => {
-    if (authStore.isAuthenticated) {
+    if (appcontext.isAuthenticated) {
       setSelectedView(view);
     }
   }
@@ -122,7 +118,7 @@ const MainPage = observer((props)=>{
   const renderSideMenu=()=>{
     return (
     <Sider collapsible collapsed={sideBarcollapsed} onCollapse={onCollapse}>
-      <div style={{height:64}}/>
+      <div style={{height:8}}/>
       <Menu theme="dark" mode="inline" defaultSelectedKeys={['-1']} selectedKeys={[selectedView]}>
         <Menu.Item key={options.Home} onClick={()=>selectView(options.Home)}>
           <HomeOutlined />
@@ -155,8 +151,8 @@ const MainPage = observer((props)=>{
   }
 
   const renderContent = ()=>{
-    if (!authStore.isAuthenticated) {
-      return <WelcomeView {...props}/>
+    if (!appcontext.isAuthenticated) {
+      return <EventView {...props}/>
     }
 
     switch(selectedView) {
@@ -171,20 +167,19 @@ const MainPage = observer((props)=>{
       case options.Home:
         return "Home";
       default:
-        return <WelcomeView {...props}/>
+        return <EventView {...props}/>
     }
   }
 
-  const renderHeader = ()=>{
-    return <Header >
-    </Header>;
-  }
+  // const renderHeader = ()=>{
+  //   return <Header >
+  //   </Header>;
+  // }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       {renderSideMenu()}
       <Layout className="site-layout">
-        {renderHeader()}
         <Content
           className="site-layout-background"
           style={{

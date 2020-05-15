@@ -4,7 +4,6 @@ import {
   Route,
   BrowserRouter as Router,
   Switch,
-  Redirect
 } from "react-router-dom";
 
 import { Spin } from 'antd';
@@ -22,59 +21,19 @@ import Logout from './pages/Logout';
 
 //require('react-rtc-real/assets/index.css');
 
-function PrivateRoute({ component: Component, authenticated, ...rest }) {
-  return (
-    <Route
-      {...rest}
-      render={props =>
-        authenticated === true ? (
-          <Component {...props} />
-        ) : (
-            <Redirect
-              to={{ pathname: "/login", state: { from: props.location } }}
-            />
-          )
-      }
-    />
-  );
-}
-
-function PublicRoute({ component: Component, authenticated, ...rest }) {
-  return (
-    <Route
-      {...rest}
-      render={props =>
-        authenticated === false ? (
-          <Component {...props} />
-        ) : (
-            <Redirect to="/" />
-          )
-      }
-    />
-  );
-}
-
 const App = observer(() => {
-  const { authStore } = useStores();
+  const appcontext = useStores();
 
-  return authStore.busy ? (
+  return appcontext.busy ? (
     <div className="center" style={{height:'100vh'}} role="status">
       <Spin size="large" tip="Loading..."/>
     </div>
     ) : (
       <Router>
         <Switch>
-          <Route exact path="/" component={(props)=><MainPage {...props}/>} />
-          <PublicRoute
-            path="/signup"
-            authenticated={authStore.isAuthenticated}
-            component={SignUpPage}
-          />
-          <PublicRoute
-            path="/login"
-            authenticated={authStore.isAuthenticated}
-            component={LoginPage}
-          />
+          <Route exact path="/" component={MainPage} />
+          <Route exact path="/signup" component={SignUpPage}/>
+          <Route exact path="/login" component={LoginPage}/>
           <Route exact path="/logout" component={Logout}/>
         </Switch>
       </Router>

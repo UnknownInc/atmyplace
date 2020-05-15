@@ -1,67 +1,32 @@
-# ARG BUILDID
-# ARG COMMITID
-FROM node:12.13.0-alpine AS base
-RUN apk add --update --no-cache \
-    python \
-    git \
-    make \
-    g++
+# Dockerfile extending the generic Node image with application files for a
+# single application.
+FROM gcr.io/google_appengine/nodejs
+# Check to see if the the version included in the base runtime satisfies
+# '>=12.13.0', if not then do an npm install of the latest available
+# version that satisfies it.
+RUN /usr/local/bin/install_node '>=12.13.0'
+COPY . /app/
 
-FROM base AS build
+WORKDIR /app/uiapp
 
-# Copy application dependency manifests to the container image.
-# A wildcard is used to ensure both package.json AND package-lock.json are copied.
-# Copying this separately prevents re-running npm install on every code change.
-COPY package*.json /atmyplace/
-
-WORKDIR /atmyplace
-RUN npm install
-
-COPY . ./
-
-RUN npm run build
-
-RUN rm -rf node_modules
-
-FROM base AS uibuild
-
-# Copy application dependency manifests to the container image.
-# A wildcard is used to ensure both package.json AND package-lock.json are copied.
-# Copying this separately prevents re-running npm install on every code change.
-COPY uiapp/package*.json /uiapp/
-
-WORKDIR /uiapp
-
-RUN npm install
-
-COPY ./uiapp ./
+# You have to specify "--unsafe-perm" with npm install
+# when running as root.  Failing to do this can cause
+# install to appear to succeed even if a preinstall
+# script fails, and may have other adverse consequences
+# as well.
+# This command will also cat the npm-debug.log file after the
+# build, if it exists.
+RUN npm install --unsafe-perm || \
+  ((if [ -f npm-debug.log ]; then \
+      cat npm-debug.log; \
+    fi) && false)
 
 RUN npm run build
 
-# Use the official Node.js 12 image.
-# https://hub.docker.com/_/node
-FROM node:12.13.0-alpine
-RUN apk add --update --no-cache curl
+WORKDIR /app
 
-# Create and change to the app directory.
-WORKDIR /usr/src/app
-
-COPY --from=build /atmyplace .
-
-ARG BUILDID='000'
-ARG COMMITID='XXX'
-
-RUN date > BUILD_DATE
-RUN echo ${BUILDID} > BUILD_ID
-RUN echo ${COMMITID} > COMMIT_ID
-
-# Install production dependencies.
-RUN npm install --only=production
-
-COPY --from=uibuild /uiapp/build ./uiapp/build
-
-# RUN addgroup -S nodejs && adduser -G -S nodejs nodejs
-# USER nodejs
-
-# Run the web service on container startup.
-CMD [ "npm", "start" ]
+RUN npm install --unsafe-perm || \
+  ((if [ -f npm-debug.log ]; then \
+      cat npm-debug.log; \
+    fi) && false)
+CMD npm start

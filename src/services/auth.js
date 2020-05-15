@@ -1,16 +1,14 @@
-import { auth } from "../services/firebase";
+import { auth, db } from "../services/firebase";
 
-
-export const requireAuth = async (req, res, next)=>{
-
+export const readAuth = async (req, _res, next)=>{
   if (req.headers.authorization) {
     const authparts = req.headers.authorization.split(' ');
     if (authparts.length<2) {
-      return res.status(400).send('Invalid Authorization header.');
+      return next();
     }
 
     if (authparts[0]!=='Bearer') {
-      return res.status(400).send('Requires Bearer token');
+      return next();
     }
 
     try {
@@ -20,9 +18,29 @@ export const requireAuth = async (req, res, next)=>{
       req.auser = await auth().getUser(req.uid); 
       next();
     } catch(e) {
-      res.status(403).send('Unauthorized.')
+      next()
     }
   } else {
-    res.status(403).send('Unauthorized.')
+    next();
   }
+}
+
+export const requireAuth = async (req, res, next)=>{
+  if (req.uid) {
+    return next();
+  } else {
+    readAuth(req, res, ()=>{
+      if (req.uid) return next();
+      res.status(403).send('Unauthorized.');
+    });
+  }
+}
+
+export const requireUser = async (req, res, next)=>{
+  await requireAuth(req, res,async ()=>{
+    const uref=db().collection('atmyplace_users').doc(req.uid);
+    const snapshot = await uref.get();
+    req.user = snapshot.data();
+    next();
+  })
 }

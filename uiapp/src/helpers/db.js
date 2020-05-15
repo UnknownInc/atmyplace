@@ -1,5 +1,9 @@
 import { db } from "../services/firebase";
 
+export function userDb() {
+  return db.ref('/atmyplace_users');
+}
+
 export function readChats() {
   let abc = [];
   db.ref("chats").on("value", snapshot => {

@@ -4,11 +4,11 @@ import {observer} from "mobx-react";
 import {Redirect} from 'react-router-dom';
 
 const Logout =observer((props)=>{
-  const {text='Logout', redirectTo='/'} = props;
-  const {authStore} = useStores();
+  const {text='Sign Out', redirectTo='/'} = props;
+  const appcontext = useStores();
   
-  if (authStore.isAuthenticated) {
-    return <a href="#" onClick={e=>{e.preventDefault(); authStore.logout();}}>{text}</a>
+  if (appcontext.isAuthenticated) {
+    return <a href="/" onClick={e=>{e.preventDefault(); appcontext.logout();}}>{text}</a>
   } else {
     return <Redirect to={redirectTo}/>
   }

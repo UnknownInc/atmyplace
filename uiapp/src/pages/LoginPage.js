@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import {observer} from 'mobx-react';
 
 import { Layout, Input, Alert, Form, Button, Checkbox, Card, Space} from 'antd';
@@ -18,13 +18,13 @@ const tailLayout = {
   wrapperCol: { offset: 8, span: 16 },
 };
 const LoginPage = observer(()=>{
-  const {authStore} = useStores();
+  const appcontext = useStores();
   const [error, setError] = useState(null);
   const [values, setValues] = useState({remember: true});
   const onFinish = async (values) => {
     setError(null);
     try {
-      await authStore.signin(values.email, values.password);
+      await appcontext.signin(values.email, values.password);
     } catch(e) {
       console.error(e);
       setError('Bad username or password.');
@@ -35,13 +35,17 @@ const LoginPage = observer(()=>{
     console.log('Failed:', errorInfo);
   }
 
-  const onValuesChanged = (changedValues, allValues) => {
+  const onValuesChanged = (_changedValues, allValues) => {
     setValues(allValues);
+  }
+
+  if (appcontext.isAuthenticated) {
+    return <Redirect to='/'/>
   }
 
   return <Layout style={{minHeight:'100vh'}}>
     <Layout.Content className="center">
-      <Card title="Sign in to @myplace" loading={authStore.busy}>
+      <Card title="Sign in to @myplace" loading={appcontext.busy}>
         {error?<>
           <Alert message={error} type="error"/>
           <Space direction='vertical'/>
@@ -83,7 +87,7 @@ const LoginPage = observer(()=>{
           </Form.Item>
           <Form.Item>
           <div>
-            <a style={{float:'left'}}>forgot password?</a>
+            <a href='/' style={{float:'left'}}>forgot password?</a>
             <span style={{float: 'right'}}><Link to={'/signup'}>register now!</Link></span>
           </div>
           </Form.Item>

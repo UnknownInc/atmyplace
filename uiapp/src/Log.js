@@ -14,6 +14,10 @@ const COLOURS = {
 }; // choose better colours :)
 
 class Log {
+  constructor(source) {
+    this.source = source;
+  }
+
   generateMessage(level, message, source) {
     // Set the prefix which will cause debug to enable the message
     const namespace = `${BASE}:${level}`;
@@ -27,20 +31,20 @@ class Log {
   }
   
   trace(message, source) {
-    return this.generateMessage('trace', message, source);
+    return this.generateMessage('trace', message, source||this.source);
   }
   
   info(message, source) {
-    return this.generateMessage('info', message, source);
+    return this.generateMessage('info', message, source||this.source);
   }
   
   warn(message, source) {
-    return this.generateMessage('warn', message, source);
+    return this.generateMessage('warn', message, source||this.source);
   }
   
   error(message, source) {
-    return this.generateMessage('error', message, source);
+    return this.generateMessage('error', message, source||this.source);
   }
 }
 
-export default new Log();
+export default Log;

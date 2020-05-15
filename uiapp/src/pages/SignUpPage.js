@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import { signUp, signInWithGoogle, signInWithGitHub } from "../helpers/auth";
 
-import { Layout, Input, Row,Col, Form, Divider, Button, Checkbox, Card  } from 'antd';
+import { Layout, Input, Form, Button, Checkbox, Card  } from 'antd';
 import {
 } from '@ant-design/icons';
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Content } = Layout;
 
 const layout = {
   labelCol: { span: 8 },
@@ -73,7 +72,7 @@ export default class SignUpPage extends Component {
       this.setState({ error: error.message });
     }
   }
-  validatePassword = (rule, value, callback) => {
+  validatePassword = (_rule, value, callback) => {
     if (value && value.length <6) {
       callback("The password should be atleast 6 characters long!");
     } else {
@@ -136,10 +135,11 @@ export default class SignUpPage extends Component {
             >
               <Input.Password />
             </Form.Item>
-  {/*     
-            <Form.Item {...tailLayout} name="remember" valuePropName="checked">
-              <Checkbox>Remember me</Checkbox>
-            </Form.Item> */}
+            {/*     
+              <Form.Item {...tailLayout} name="remember" valuePropName="checked">
+                <Checkbox>Remember me</Checkbox>
+              </Form.Item> 
+            */}
       
             <Form.Item
               name="agreement"
@@ -150,7 +150,7 @@ export default class SignUpPage extends Component {
               {...tailLayout}
             >
               <Checkbox>
-                I have read the <a href="#">agreement</a>
+                I have read the <a href="/">agreement</a>
               </Checkbox>
             </Form.Item>
             <Form.Item {...tailLayout}>

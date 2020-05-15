@@ -7,6 +7,7 @@
     "node": ">=12.13.0"
   },
   "scripts": {
+    "deploy": "gcloud app deploy app.yaml",
     "build": "babel src -d build",
     "buildweb": "cd uiapp && npm run build",
     "dev": "nodemon -w 'src/**/*' -r dotenv/config --exec babel-node src/server.js",
