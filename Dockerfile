@@ -16,17 +16,11 @@ WORKDIR /app/uiapp
 # as well.
 # This command will also cat the npm-debug.log file after the
 # build, if it exists.
-RUN npm install --unsafe-perm || \
-  ((if [ -f npm-debug.log ]; then \
-      cat npm-debug.log; \
-    fi) && false)
+RUN npm install --unsafe-perm
 
 RUN npm run build
 
 WORKDIR /app
 
-RUN npm install --unsafe-perm || \
-  ((if [ -f npm-debug.log ]; then \
-      cat npm-debug.log; \
-    fi) && false)
+RUN npm install --unsafe-perm
 CMD npm start
