@@ -2,12 +2,16 @@
 # single application.
 FROM gcr.io/google_appengine/nodejs
 # Check to see if the the version included in the base runtime satisfies
-# '>=13.14.0', if not then do an npm install of the latest available
+# '>=14.2.0', if not then do an npm install of the latest available
 # version that satisfies it.
-RUN /usr/local/bin/install_node '>=13.14.0'
+RUN /usr/local/bin/install_node '>=14.2.0'
 COPY . /app/
 
 WORKDIR /app/uiapp
+
+RUN npm install react-dev-utils
+
+RUN npm i react-app-rewired -g
 
 # You have to specify "--unsafe-perm" with npm install
 # when running as root.  Failing to do this can cause
@@ -21,10 +25,11 @@ RUN npm install --unsafe-perm || \
       cat npm-debug.log; \
     fi) && false)
 
-RUN npm i react-app-rewired -g
 RUN npm run build
 
 WORKDIR /app
+
+RUN rm -rf node_modules
 
 RUN npm install --unsafe-perm || \
   ((if [ -f npm-debug.log ]; then \
