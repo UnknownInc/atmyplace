@@ -4,22 +4,22 @@
   "private": true,
   "proxy": "http://localhost:8080",
   "engines": {
-    "node": ">=12.13.0"
+    "node": ">=14.2.0"
   },
   "dependencies": {
     "@ant-design/dark-theme": "^2.0.1",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.5.0",
-    "@testing-library/user-event": "^7.2.1",
-    "antd": "^4.1.3",
+    "@testing-library/jest-dom": "^5.7.0",
+    "@testing-library/react": "^10.0.4",
+    "@testing-library/user-event": "^10.2.4",
+    "antd": "^4.2.2",
     "debug": "^4.1.1",
-    "firebase": "^7.14.0",
+    "firebase": "^7.14.4",
     "md5": "^2.2.1",
     "mobx": "^5.15.4",
     "mobx-react": "^6.2.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-router-dom": "^5.1.2",
+    "react-router-dom": "^5.2.0",
     "react-rtc-real": "^1.11.22",
     "react-scripts": "3.4.1"
   },
@@ -51,7 +51,7 @@
     "babel-preset-mobx": "^2.0.0",
     "customize-cra": "^0.9.1",
     "less": "^3.11.1",
-    "less-loader": "^6.1.0",
+    "less-loader": "^5.0.0",
     "react-app-rewired": "^2.1.6"
   }
 }
