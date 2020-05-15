@@ -25,9 +25,7 @@
    - 'app'
    - 'deploy'
    - '--image-url'
-   - 'gcr.io/$PROJECT_ID/atmyplace:latest'
-   - '--region'
-   - 'us-central1' 
+   - 'gcr.io/$PROJECT_ID/atmyplace:latest' 
 
 #  #step3 Deploy container image to Cloud Run
 #  - name: 'gcr.io/cloud-builders/gcloud'
