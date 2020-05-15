@@ -2,9 +2,9 @@
 # single application.
 FROM gcr.io/google_appengine/nodejs
 # Check to see if the the version included in the base runtime satisfies
-# '>=12.13.0', if not then do an npm install of the latest available
+# '>=13.14.0', if not then do an npm install of the latest available
 # version that satisfies it.
-RUN /usr/local/bin/install_node '>=12.13.0'
+RUN /usr/local/bin/install_node '>=13.14.0'
 COPY . /app/
 
 WORKDIR /app/uiapp
