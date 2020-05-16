@@ -35,4 +35,4 @@ RUN npm install --unsafe-perm || \
 
 RUN npm run build
 
-CMD npm start
+CMD NODE_ENV=production && npm start

@@ -7,7 +7,7 @@ liveness_check:
   failure_threshold: 2
   success_threshold: 2
 network:
-  # instance_tag: atmyplace
-  # name: atmyplace
-  # subnetwork_name: frontend
+  instance_tag: atmyplace
+  name: atmyplace
+  subnetwork_name: atmyplace
   session_affinity: true
