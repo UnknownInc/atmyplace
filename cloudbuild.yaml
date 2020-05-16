@@ -1,5 +1,5 @@
  steps:
- #step 0 pull prev image for caching
+ # step 0 pull prev image for caching
  - name: 'gcr.io/cloud-builders/docker'
    entrypoint: 'bash'
    args:
@@ -8,24 +8,24 @@
      docker pull gcr.io/$PROJECT_ID/atmyplace:latest || exit 0
 #  - name: gcr.io/cloud-builders/gsutil
 #    args: ['rsync', '-r', 'gs://my-cache-bucket/repository', '/workspace/.nmcache']
- #step1 build the container image
+ # step1 build the container image
  - name: 'gcr.io/cloud-builders/docker'
    args: [
      'build', 
      '-t', 'gcr.io/$PROJECT_ID/atmyplace:latest', 
      '--cache-from', 'gcr.io/$PROJECT_ID/atmyplace:latest',
      '.']
- #step2 push the container image to Container Registry
+ # step2 push the container image to Container Registry
  - name: 'gcr.io/cloud-builders/docker'
    args: ['push', 'gcr.io/$PROJECT_ID/atmyplace:latest']
 
- #step3 Deploy container image to appengine
+ # step3 Deploy container image to appengine
  - name: 'gcr.io/cloud-builders/gcloud'
    args:
    - 'app'
    - 'deploy'
    - '--image-url'
-   - 'gcr.io/$PROJECT_ID/atmyplace:latest' 
+   - 'gcr.io/$PROJECT_ID/atmyplace:latest'
 
 #  #step3 Deploy container image to Cloud Run
 #  - name: 'gcr.io/cloud-builders/gcloud'

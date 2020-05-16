@@ -26,7 +26,15 @@
     "morgan": "^1.10.0",
     "temp-dir": "^2.0.0",
     "uuid": "^8.0.0",
-    "ws": "^7.3.0"
+    "ws": "^7.3.0",
+    "scc-broker-client": "^8.0.0",
+    "socketcluster-client": "^16.0.1",
+    "socketcluster-server": "^16.0.0",
+    "connect": "^3.6.6",
+    "eetase": "^4.0.0",
+    "nodemon": "^1.18.9",
+    "sc-errors": "^2.0.1",
+    "serve-static": "^1.13.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
