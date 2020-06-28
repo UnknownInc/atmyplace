@@ -8,7 +8,8 @@
     "npm": ">=6.14.5"
   },
   "scripts": {
-    "deploy": "gcloud app deploy app.yaml",
+    "deploy": "gcloud app deploy --image-url gcr.io/$PROJECT_ID/atmyplace:latest --quiet app.yaml",
+    "docker": "docker build -t gcr.io/$PROJECT_ID/atmyplace:latest .",
     "build": "babel src -d build",
     "buildweb": "cd uiapp && npm run build",
     "dev": "nodemon -w 'src/**/*' -r dotenv/config --exec babel-node src/server.js",
@@ -40,6 +41,7 @@
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
     "@babel/node": "^7.8.7",
+    "@babel/plugin-proposal-class-properties": "^7.10.1",
     "@babel/preset-env": "^7.9.6",
     "dotenv": "^8.2.0",
     "nodemon": "^2.0.4"

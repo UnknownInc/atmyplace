@@ -1,10 +1,10 @@
+import cc from './consoleColors';
+import admin,{db} from './services/firebase';
 const http = require('http');
 const eetase = require('eetase');
 const socketClusterServer = require('socketcluster-server');
 const express = require('express');
 const bodyParser = require('body-parser');
-const serveStatic = require('serve-static');
-const path = require('path');
 const fs = require('fs');
 const morgan = require('morgan');
 const uuid = require('uuid');
@@ -46,8 +46,8 @@ if (ENVIRONMENT === 'dev') {
   // available formats.
   expressApp.use(morgan('dev'));
 }
-expressApp.use(serveStatic(path.resolve(__dirname, 'public')));
-expressApp.use(serveStatic(path.resolve(__dirname,'uiapp/build')));
+expressApp.use(express.static('uiapp/build'));
+expressApp.use(express.static('public'));
 expressApp.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 expressApp.use(bodyParser.json({limit:"50mb"})); //Used to parse JSON bodies
 
@@ -56,20 +56,39 @@ expressApp.get('/health-check', (_req, res) => {
   res.status(200).send('OK');
 });
 
+const METADATA_NETWORK_INTERFACE_URL =
+  'http://metadata/computeMetadata/v1/' +
+  '/instance/network-interfaces/0/access-configs/0/external-ip';
+
+const getExternalIp = async () => {
+  const options = {
+    headers: {
+      'Metadata-Flavor': 'Google',
+    },
+    json: true,
+  };
+
+  try {
+    const {body} = await request(METADATA_NETWORK_INTERFACE_URL, options);
+    return body;
+  } catch (err) {
+    console.log(`${cc.red('[Error]')} while talking to metadata server, assuming localhost ${err}`);
+    return 'localhost';
+  }
+};
+
 expressApp.get('/ping', async (_req, res) => {
-  res.send('pong');
+  res.send('pong '+await getExternalIp());
 });
 
 expressApp.use('/api', require('./api'));
 
 let indexhtml;
 
-if (process.env.NODE_ENV==='producion') {
-  indexhtml = fs.readFileSync('uiapp/build/index.html');
-} else {
-  indexhtml = fs.readFileSync('uiapp/public/index.html');
-}
 expressApp.get('*', (_req, res)=>{
+  if (!indexhtml) {
+    indexhtml = fs.readFileSync('uiapp/build/index.html');
+  }
   res.send(indexhtml.toString());
 });
 
@@ -80,10 +99,163 @@ expressApp.get('*', (_req, res)=>{
   }
 })();
 
+let active=0;
+const socketMap={};
+const userMap={};
+const statusRef = admin.database().ref('/atmyplace_users');
+
+statusRef.on('child_changed', function(snapshot){
+  try {
+    var newData = snapshot.val();
+    console.log(`${cc.yellow(newData.state)}\t user: ${cc.blue(snapshot.key)}`);
+    const docref=db().collection('atmyplace_users').doc(snapshot.key);
+
+    docref.set({
+      state: newData.state,
+    }, {merge: true});
+  } catch (e) {
+    console.error(e);
+  }
+});
+
 // SocketCluster/WebSocket connection handling loop.
 (async () => {
   for await (let {socket} of agServer.listener('connection')) {
     // Handle socket connection.
+    const LSOCKETID = cc.bright(socket.id);
+    const log = (e,m)=>console.log(`   ${cc.dim(`[${e}]`)}\t${LSOCKETID} ${m||''}`);
+    socketMap[socket.id]={
+      socket,
+      events:{}
+    };
+    log('New',`active:${Object.keys(socketMap).length}`);
+
+    (async () => {
+      for await (let event of socket.listener('raw')){
+        console.dir(event.message);
+      }
+    })();
+
+    (async () => {
+      for await (let event of socket.listener('subscribe')){
+        const data = event.subscriptionOptions.data;
+        if (data.eid) {
+          const sdata = socketMap[socket.id];
+          sdata.uid=data.uid;
+          sdata.events[data.eid]=data;
+          socketMap[socket.id]=sdata;
+
+          const udata=userMap[data.uid]||{};
+          udata.socket = socket;
+          userMap[data.uid] = udata;
+          log('Joined',`user:${cc.blue(data.uid)} event:${cc.yellow(data.eid)}`);
+        }
+      }
+    })();
+    (async () => {
+      for await (let event of socket.listener('unsubscribe')){
+        const sdata = socketMap[socket.id];
+        const edata=sdata.events[event.channel];
+        log('Exited',`event:${cc.yellow(event.channel)} user:${cc.blue(edata.uid)}`);
+        const usr =  db().collection('/atmyplace_events').doc(event.channel).collection('attendees').doc(edata.uid);
+        usr.delete()
+          .then(()=>{
+            // removed from attendees
+          })
+          .catch(e=>{
+            console.error(`Unable to remove attendee ${sdata.uid} `,e)
+          })
+        delete sdata.events[event.channel];
+        socketMap[socket.id]=sdata;
+      }
+    })();
+
+
+    (async () => {
+      // Set up a loop to handle and respond to RPCs.
+      for await (let request of socket.procedure('register')) {
+        const data=request.data;
+        if (data.uid) {
+          const udata=userMap[data.uid]||{};
+          udata.socket = socket;
+          userMap[data.uid] = udata;
+
+          const sdata = socketMap[socket.id];
+          sdata.uid=data.uid;
+          socketMap[socket.id]=sdata;
+          log('register',`user:${cc.blue(data.uid)}`);
+        }
+        request.end('ok');
+      }
+    })();
+
+    (async () => {
+      // Set up a loop to handle and respond to RPCs.
+      for await (let request of socket.procedure('sendDesc')) {
+        const data=request.data;
+        // if (request.data && request.data.bad) {
+        //   let badCustomError = new Error('Server failed to execute the procedure');
+        //   badCustomError.name = 'BadCustomError';
+        //   request.error(badCustomError);
+        //   continue;
+        // }
+        const sdata=socketMap[socket.id];
+        const udata = userMap[data.uid];
+        log('sdp', `to:${cc.blue(data.uid)} from:${cc.blue(sdata.uid)}`);
+        if (udata) {
+          udata.socket.invoke('gotDesc',{uid:sdata.uid, desc:data.desc})
+            .then(d=>{
+              request.end(d);
+            })
+            .catch(e=>{
+              log('ERROR', cc.red(JSON.stringify(e)));
+            })
+        } else {
+          let noUserError = new Error('Server failed to find user');
+          noUserError.name = 'NoUserError';
+          request.error(noUserError);
+        }
+      }
+    })();
+
+    (async () => {
+      // Set up a loop to handle and respond to RPCs.
+      for await (let request of socket.procedure('sendIceCandidate')) {
+        const data=request.data;
+        const sdata=socketMap[socket.id];
+        const udata = userMap[data.uid];
+        log('ice', `to:${cc.blue(data.uid)} from:${cc.blue(sdata.uid)}`);
+        if (udata) {
+          udata.socket.invoke('gotIceCandidate',{uid:sdata.uid, candidate:data.candidate})
+            .then(d=>{
+              request.end(d);
+            })
+            .catch(e=>{
+              log('ERROR', cc.red(JSON.stringify(e)));
+            })
+        } else {
+          let noUserError = new Error('Server failed to find user');
+          noUserError.name = 'NoUserError';
+          request.error(noUserError);
+        }
+      }
+    })();  
+    
+    (async () => {
+      for await (let event of socket.listener('close')){
+        log('Close',`data: ${JSON.stringify(event)}`);
+        setTimeout(()=>{
+          const sdata = socketMap[socket.id];
+          const udata = userMap[sdata.uid];
+          if (udata && udata.socket===socket) {
+            delete userMap[sdata.uid];
+          }
+          delete socketMap[socket.id];
+          // socket.kickOut([channel, message])
+          log('Cleanup',`user:${cc.blue(sdata.uid)} active:${Object.keys(socketMap).length}`);
+        }, 10000)
+      }
+    })();
   }
 })();
 

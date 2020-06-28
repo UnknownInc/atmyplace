@@ -40,6 +40,26 @@ export default class EventService {
     }
     throw error;
   }
+
+  static async attendees(eid) {
+    const error = {code: 500, message: 'API error.'};
+    try {
+      const response = await apicall(`/api/event/${eid}/attendees`,{
+        method: 'GET',
+      });
+      if (response.ok) {
+        return response.json();
+      }
+
+      error.code=response.status;
+      error.message=response.statusText;
+
+    } catch (e) {
+      console.error(e);
+    }
+    throw error;
+
+  }
   
   static async exit(eid) {
     const error = {code: 500, message: 'API error.'};

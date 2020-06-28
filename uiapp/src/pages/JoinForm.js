@@ -1,5 +1,7 @@
 import React from 'react';
 
+import {useHistory} from 'react-router-dom';
+
 import { Alert, Form, Input, notification } from 'antd';
 import {observer} from 'mobx-react';
 import {useStores} from '../hooks';
@@ -9,26 +11,19 @@ const layout = {
   labelCol: { span: 2 },
   wrapperCol: { span: 24 },
 };
-// const tailLayout = {
-//   wrapperCol: { offset: 8, span: 16 },
-// };
 const JoinForm = observer(()=>{
-  const {sessionStore={}} = useStores();
-  const {isBusy, lasterror} = sessionStore??{};
+  //const history = useHistory();
+  const {sessionStore} = useStores();
+  const {isBusy, lasterror} = sessionStore;
   const [form] = Form.useForm();
 
   const onJoin = async ()=>{
     const eventname = form.getFieldValue('eventname')||''
     if (eventname.trim()==='') return;
-    try {
+    try{
       await sessionStore.get(eventname);
     } catch (e) {
-      console.error(e);
-      notification.error({
-        message: 'Join ' + eventname,
-        description: e,
-        duration: 0
-      })
+      console.log(e);
     }
   }
 

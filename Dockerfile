@@ -6,10 +6,10 @@
 # version that satisfies it.
 # RUN /usr/local/bin/install_node '>=14.2.0'
 FROM node:14
-COPY . /app/
 
-WORKDIR /app/uiapp
+COPY package*.json /app/
 
+WORKDIR /app
 # You have to specify "--unsafe-perm" with npm install
 # when running as root.  Failing to do this can cause
 # install to appear to succeed even if a preinstall
@@ -22,17 +22,21 @@ RUN npm install --unsafe-perm || \
       cat npm-debug.log; \
     fi) && false)
 
-RUN npm run build
+COPY uiapp/package*.json /app/uiapp/
 
-WORKDIR /app
-
-RUN rm -rf node_modules
+WORKDIR /app/uiapp
 
 RUN npm install --unsafe-perm || \
   ((if [ -f npm-debug.log ]; then \
       cat npm-debug.log; \
     fi) && false)
 
+COPY . /app/
+
 RUN npm run build
 
-CMD NODE_ENV=production && npm start
+WORKDIR /app
+
+RUN npm run build
+
+CMD NODE_ENV=production npm start

@@ -5,7 +5,6 @@ const api = express.Router();
 
 api.get('/:eventname', async (req, res)=>{
   try {
-    console.log(req.params.eventname)
     const qRef = db().collection('/atmyplace_events')
         .where('name', '==', req.params.eventname.toLowerCase())
         .limit(1);
@@ -33,6 +32,28 @@ api.put('/:eventid/join', requireUser, async (req, res)=>{
       ...req.body
     },{merge: true});
     return res.json({});
+  } catch (e) {
+    console.trace(e);
+    return res.status(500).send();
+  }
+})
+
+
+api.get('/:eventid/attendees', requireUser, async (req, res)=>{
+  try {
+    const collectionRef =  db().collection('/atmyplace_events').doc(req.params.eventid).collection('attendees');
+    
+    const attendees=[];
+
+    const documentRefs = await collectionRef.listDocuments();
+    
+    let i=0;
+    while(i<documentRefs.length){
+      const documentSnapshot = await documentRefs[i].get();
+      attendees.push(documentSnapshot.data());
+      i++;
+    }
+    return res.json(attendees);
   } catch (e) {
     console.trace(e);
     return res.status(500).send();

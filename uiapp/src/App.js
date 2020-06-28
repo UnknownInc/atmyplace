@@ -31,10 +31,10 @@ const App = observer(() => {
     ) : (
       <Router>
         <Switch>
-          <Route exact path="/" component={MainPage} />
           <Route exact path="/signup" component={SignUpPage}/>
           <Route exact path="/login" component={LoginPage}/>
           <Route exact path="/logout" component={Logout}/>
+          <Route path="/" component={MainPage} />
         </Switch>
       </Router>
     );

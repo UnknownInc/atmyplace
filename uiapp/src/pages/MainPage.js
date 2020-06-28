@@ -1,8 +1,14 @@
 import React, {useState} from 'react';
+import {
+  Switch,
+  Route,
+  useHistory,
+  useRouteMatch,
+} from "react-router-dom";
 
 import {observer} from 'mobx-react';
 
-import { Layout, Menu, Modal } from 'antd';
+import { Layout, Menu, Modal,Spin } from 'antd';
 import {
   UserOutlined,
   CalendarOutlined,
@@ -16,6 +22,7 @@ import {useStores} from '../hooks';
 
 import JoinForm from './JoinForm';
 import AccountView from './AccountView';
+import SettingsView from './SettingsView';
 
 import CalendarView from './CalendarView';
 import EventView from './EventView';
@@ -23,87 +30,22 @@ import EventView from './EventView';
 const { Content, Sider } = Layout;
 
 const options={
-  Home: 'Home',
-  Schedule:'Schedule',
-  Account: 'Account',
-  Settings: 'Settings',
-  Experiments: 'Experiments',
-  Welcome: 'Welcome'
+  Home: 'home',
+  Schedule:'schedule',
+  Account: 'account',
+  Settings: 'settings',
+  Experiments: 'experiments',
+  Event: 'event'
 };
-
-
-// let isCreatingSocket = false; 
-// const createMainSocket = async () =>{
-//   if (isCreatingSocket) return;
-//   isCreatingSocket = true;
-//   const key='n_conncetionstatus'
-//   const notify = (description)=>{
-//     notification.open({
-//       key,
-//       message:'Server Connection',
-//       description,
-//       icon:<ApiOutlined />
-//     });
-//   }
-//   try {
-//     const socket = new WebSocket('wss://atmyplace.rmcloudsoftware.com');
-    
-//     socket.onopen = () => {
-//      notify('Connected.')
-//     }
-
-//     socket.onmessage = (message) => {
-//       console.info('Recieving Websocket message: ', message);
-//       const data = JSON.parse(message.data);
-//       // switch (data.type) {
-//       //   case TYPE_NEW_USER:
-//       //     handleSocketConnection(data.id);
-//       //     break;
-//       //   case TYPE_CONNECTION:
-//       //     handleConnectionReady(data);
-//       //     break;
-//       //   case TYPE_OFFER:
-//       //     console.log('case Offer')
-//       //     handleOffer(data);
-//       //     break;
-//       //   case TYPE_ANSWER:
-//       //     console.log('case Answer')
-//       //     handleAnswer(data);
-//       //     break;
-//       //   case TYPE_ICECANDIDATE:
-//       //     console.log('case Ice Candidate')
-//       //     handleIceCandidate(data);
-//       //     break;
-//       //   default:
-//       //     console.error('Recieving message failed');
-//       // }
-//     }
-
-//     socket.onclose = (event) => {
-//       console.log('Websocket closed: ', event);
-//       notify('Disconnected.')
-//     }
-
-//     socket.onerror = (error) => {
-//       console.error('Websocket error: ', error);
-//       notify('Error in connection. Retrying...');
-//     }
-//     window.mainSocket = socket;
-//   } finally {
-//     isCreatingSocket = false;
-//   }
-// }
 
 const MainPage = observer((props)=>{
 
+  let match = useRouteMatch("/:route")||{params:{route:'home'}};
+  const history = useHistory();
   const appcontext = useStores();
   const [sideBarcollapsed,setSideBarState] = useState(true);
   const [joinModalVisibility,setJoinModalVisibility] = useState(false);
-  const [selectedView, setSelectedView] = useState(options.Welcome);
-
-  // if (!window.mainSocket) {
-  //   createMainSocket().then(()=>{});
-  // }
+  const [selectedView, setSelectedView] = useState(appcontext.isAuthenticated?(match.params.route):options.Event);
 
   const hideJoinModal = ()=>setJoinModalVisibility(false);
 
@@ -111,6 +53,7 @@ const MainPage = observer((props)=>{
 
   const selectView = view => {
     if (appcontext.isAuthenticated) {
+      history.push(`/${view}`);
       setSelectedView(view);
     }
   }
@@ -124,7 +67,7 @@ const MainPage = observer((props)=>{
           <HomeOutlined />
           <span>Home</span>
         </Menu.Item>
-        <Menu.Item key={options.Welcome} onClick={()=>selectView(options.Welcome)}>
+        <Menu.Item key={options.Event} onClick={()=>selectView(options.Event)}>
           <AppstoreAddOutlined/>
           <span>Join event</span>
         </Menu.Item>
@@ -155,26 +98,16 @@ const MainPage = observer((props)=>{
       return <EventView {...props}/>
     }
 
-    switch(selectedView) {
-      case options.Schedule:
-        return <CalendarView/>;
-      case options.Account:
-        return <AccountView {...props}/>
-      case options.Settings:
-        return "Settings"
-      case options.Experiments:
-        return "Experiments";
-      case options.Home:
-        return "Home";
-      default:
-        return <EventView {...props}/>
-    }
+    return <Switch>
+      <Route path={`/${options.Experiments}`} component={()=><div>Experiments</div>}/>
+      <Route path={`/${options.Schedule}`} component={CalendarView}/>
+      <Route path={`/${options.Settings}`} component={SettingsView}/>
+      <Route path={`/${options.Event}/:eventid`} component={(props)=><EventView {...props}/>}/>
+      <Route path={`/${options.Event}`} component={(props)=><EventView {...props}/>}/>
+      <Route path={`/${options.Account}`} component={AccountView}/>
+      <Route exact path='/' component={()=><div>Home</div>}/>
+    </Switch>
   }
-
-  // const renderHeader = ()=>{
-  //   return <Header >
-  //   </Header>;
-  // }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -196,6 +129,17 @@ const MainPage = observer((props)=>{
           </Modal>
         </Content>
       </Layout>
+      <Modal
+          title="Bad connection"
+          centered
+          visible={appcontext.connectionState!=='online'}
+          footer={null}
+        >
+          <div style={{textAlign:'center'}}>
+            <Spin size='large'/>
+            <p>Current Connection State: <strong>{appcontext.connectionState}</strong></p>
+          </div>
+        </Modal>
     </Layout>
   );
 });

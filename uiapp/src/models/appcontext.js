@@ -2,7 +2,9 @@ import { observable, action, computed } from 'mobx'
 import {auth, db} from '../services/firebase';
 import Logger from '../Log';
 import SessionStore from './sessionStore';
+import SettingsStore from './localSettings';
 import User from './user';
+const socketClusterClient = require("socketcluster-client");
 
 const log = new Logger('AppContext');
 
@@ -17,6 +19,19 @@ const isOnlineForDatabase = {
 };
 
 export default class AppContext {
+
+  @observable
+  localSettings;
+
+  @observable
+  rtcservers=null;
+
+  @observable
+  socket=null;
+
+  @observable
+  connectionState='offline';
+
   @observable
   sessionStore=new SessionStore();
 
@@ -89,10 +104,59 @@ export default class AppContext {
     log.info('init');
 
     this.busy=true;
+    this.localSettings = new SettingsStore();
+
+    let options;
+    if (process.env.NODE_ENV!=='production') {
+      options={
+        hostname: 'localhost',
+        port: 8080,
+        autoConnect: false
+      }
+    } else {
+      options={
+        autoConnect: false
+      };
+    }
+    window.socket = socketClusterClient.create(options);
+    
+    (async () => {
+      for await (let data of window.socket.listener('error')) {
+        log.error(`socket error: ${JSON.stringify(data)}`);
+        if (data.error && data.error.code===1006) {
+          this.connectionState='offline';
+        }
+      }
+      log.warn('socket "error" listener was closed.');
+      this.connectionState='offline';
+    })();
+
+    (async () => {
+      for await (let _data of window.socket.listener('connecting')) {
+        this.connectionState='connecting';
+        log.info(`socket connecting...`);
+      }
+      log.warn('socket "connecting" listener was closed.');
+      this.connectionState='offline';
+    })();
+
+    (async () => {
+      for await (let data of window.socket.listener('connect')) {
+        this.connectionState='online';
+        log.info(`socket connected: ${JSON.stringify(data)}`);
+        this.register();
+      }
+      log.warn('socket "connect" listener was closed.');
+      this.connectionState='offline';
+    })();
+
+    window.socket.connect();
+
     this.idToken = window.localStorage.getItem('idToken');
     window.apiAuth = this.authorization;
 
     if (!this.idToken) {
+      this.busy=false;
       log.info('Not authenticated');
       return;
     }
@@ -100,6 +164,7 @@ export default class AppContext {
     try {
       this.user = new User();
       await this.user.get();
+      await window.socket.invoke('register',{uid: this.user.uid});
       this.setConnectionStateListener()
     } catch(e) {
       log.error(e);
@@ -125,7 +190,7 @@ export default class AppContext {
 
       this.user = new User();
       await this.user.get();
-
+      this.register();
       this.setConnectionStateListener();
 
     } finally {
@@ -138,6 +203,7 @@ export default class AppContext {
   logout() {
     log.info('logout');
     this.sessionStore.exit();
+    this.unregister();
     this.idToken = null;
     this.user = null;
     window.apiAuth = null;
@@ -152,14 +218,97 @@ export default class AppContext {
     .catch(e=>log.error(e));
   }
 
+  @action
+  register(){
+    if (this.connectionState==='online' && this.user) {
+      window.socket.invoke('register',{uid: this.user.uid})
+        .then(()=>{
+          log.info(`Registered user ${this.user.uid}`);
+        })
+        .catch(e=>{
+          log.error('Unable to register user', e);
+        })
+    }
+  }
+
+  @action
+  unregister(){
+    if (this.connectionState==='online' && this.user) {
+      window.socket.invoke('unregister',{uid: this.user.uid})
+        .then(()=>{
+          log.info(`Unregistered user ${this.user.uid}`);
+        })
+        .catch(e=>{
+          log.error('Unable to unregister user', e);
+        })
+    }
+  }
+
+  @action 
+  refreshToken(usr) {
+      let refresh = false;
+      const appContext = this;
+      const docCookies = {
+        getItem: function (sKey) {
+          if (!sKey || !this.hasItem(sKey)) { return null; }
+          return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" + escape(sKey).replace(/[-.+*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
+        },
+        hasItem: function (sKey) {
+          return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[-.+*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+        }
+      };
+
+      (function poll(){
+        var dt = new Date();
+        var timeout = 55*60*1000;
+        console.log(docCookies.getItem('firebaseAccessTimer')- dt.getTime() );
+        if (docCookies.getItem('firebaseAccessTimer') - dt.getTime() < 0) {
+          refresh = true;
+        }
+
+        if (usr) {
+          console.log('user signed-in');
+          if (refresh) {console.log('refresing accessToken');}
+          usr.getIdToken(refresh).then(function(accessToken) {
+            appContext.idToken = accessToken;
+            window.localStorage.setItem('idToken', accessToken);
+            window.apiAuth = appContext.authorization;
+            appContext.register();
+
+            if (accessToken === docCookies.getItem('firebaseAccessToken')) {
+              window.setTimeout(poll, docCookies.getItem('firebaseAccessTimer') - dt.getTime());
+            } else {
+              document.cookie = "firebaseAccessToken=" + accessToken + '; path=/';
+              document.cookie = "firebaseAccessTimer=" + (dt.getTime() + timeout) + '; path=/';
+              window.setTimeout(poll, timeout);
+            }
+            if (document.getElementById("firebaseAccessToken")) {
+              document.getElementById("firebaseAccessToken").value = accessToken;
+            }
+          });
+
+        } else {
+          console.log('user signed-out');
+          appContext.idToken = null;
+          appContext.user = null;
+          window.apiAuth = null;
+          window.localStorage.setItem('idToken',null);
+          document.cookie = 'firebaseAccessTimer=0; path=/';
+          // window.location.href = '/login?signInSuccessUrl=' + encodeURIComponent(window.location.pathname);
+        }
+      })();
+  }
+
   static create = ()=>{
     log.info('create')
-    const auth=new AppContext();
-    auth.init()
+    const appContext=new AppContext();
+
+    auth().onAuthStateChanged(appContext.refreshToken.bind(appContext));
+    appContext.init()
       .then(()=>{
         log.info('finished authStore initialization');
       })
       .catch(e=>log.error(e));
-    return auth;
+    return appContext;
   }
 }

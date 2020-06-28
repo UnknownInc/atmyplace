@@ -11,7 +11,7 @@ const COLOURS = {
   info: 'blue',
   warn: 'pink',
   error: 'red'
-}; // choose better colours :)
+}; 
 
 class Log {
   constructor(source) {
