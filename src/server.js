@@ -96,7 +96,7 @@ expressApp.get('/_info', async (req, res)=>{
     return res.json(body);
   } catch (err) {
     console.log(`${cc.red('[Error]')} while talking to metadata server, assuming localhost ${err}`);
-    return res.json(err);
+    return res.json({error:`${URL} fetch error`, details:err});
   }
 })
 
