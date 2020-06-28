@@ -1,5 +1,8 @@
-env: flex
 runtime: custom
+api_version: '1.0'
+env: flexible
+env_variables:
+  INAME: "atmyplace"
 liveness_check:
   path: "/ping"
   check_interval_sec: 30
@@ -11,3 +14,9 @@ network:
   name: atmyplace
   subnetwork_name: atmyplace
   session_affinity: true
+automatic_scaling:
+  cool_down_period: 120s
+  min_num_instances: 1
+  max_num_instances: 2
+  cpu_utilization:
+    target_utilization: 0.5

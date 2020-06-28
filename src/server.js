@@ -78,8 +78,27 @@ const getExternalIp = async () => {
 };
 
 expressApp.get('/ping', async (_req, res) => {
-  res.send('pong '+await getExternalIp());
+  res.send('pong');
 });
+
+expressApp.get('/_info', async (req, res)=>{
+
+  const baseUrl='http://metadata.google.internal/computeMetadata/v1/instance';
+  const options = {
+    headers: {
+      'Metadata-Flavor': 'Google',
+    },
+    json: true,
+  };
+  let URL=`${baseUrl}/${req.query.p||''}`;
+  try {
+    const {body} = await request(URL, options);
+    return res.json(body);
+  } catch (err) {
+    console.log(`${cc.red('[Error]')} while talking to metadata server, assuming localhost ${err}`);
+    return res.json(err);
+  }
+})
 
 expressApp.use('/api', require('./api'));
 
